@@ -46,7 +46,6 @@ impl Transpiler {
                 Sexp::List(list, _) => {
                     if let Some(Sexp::Sym(_, _)) = list.get(0) {
                         self.translate_define(&mut builder, &list)?;
-                    // translate_macro(&list)?;
                     } else {
                         unimplemented!()
                     }
@@ -120,15 +119,8 @@ impl Transpiler {
                 block.push(inx);
             }
             _ => {
-                // TODO: use Call::with_args
-                let mut call = Call::new(name.as_ref());
-
-                for param in rest.iter() {
-                    let expr = self.translate_expr(param)?;
-                    call = call.arg(expr);
-                }
-
-                block.push(call);
+                let args = self.to_expr_vec(rest)?;
+                block.push(Call::with_args(name.as_ref(), args));
             }
         }
 
@@ -149,10 +141,7 @@ impl Transpiler {
     fn translate_expr_macro(&self, list: &[Sexp]) -> Result<Expr, String> {
         let name = take_as!(&list[0], Sexp::Sym)?;
         // TODO: avoid index errors here
-        let mut rest = vec![];
-        for item in list.iter().skip(1) {
-            rest.push(self.translate_expr(item)?);
-        }
+        let rest = self.to_expr_vec(&list[1..])?;
 
         if name.as_ref() == "not" {
             assert_eq!(1, rest.len());
@@ -165,5 +154,13 @@ impl Transpiler {
             let call = Call::with_args(name.as_ref(), rest);
             Ok(Expr::from(call))
         }
+    }
+
+    fn to_expr_vec(&self, list: &[Sexp]) -> Result<Vec<Expr>, String> {
+        let mut rest = vec![];
+        for item in list.iter() {
+            rest.push(self.translate_expr(item)?);
+        }
+        Ok(rest)
     }
 }
