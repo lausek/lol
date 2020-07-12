@@ -1,0 +1,18 @@
+[package]
+name = "lol"
+version = "0.1.0"
+authors = ["lausek <root@lausek.eu>"]
+edition = "2018"
+
+[[bin]]
+name = "lol"
+path = "src/bin.rs"
+
+[lib]
+name = "lol"
+path = "src/lib.rs"
+
+[dependencies]
+clap = "2.33.1"
+ess = "0.4.2"
+lovm2 = "0.2.8"
