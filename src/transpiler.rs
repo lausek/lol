@@ -1,4 +1,5 @@
 use ess::Sexp;
+use lovm2::hir::block::Block;
 use lovm2::hir::prelude::*;
 use lovm2::module::Module;
 use std::collections::HashMap;
@@ -43,7 +44,7 @@ impl Transpiler {
         for sexpr in sexprs.iter() {
             match sexpr {
                 Sexp::List(list, _) => {
-                    if let Some(Sexp::Sym(name, _)) = list.get(0) {
+                    if let Some(Sexp::Sym(_, _)) = list.get(0) {
                         self.translate_define(&mut builder, &list)?;
                     // translate_macro(&list)?;
                     } else {
@@ -70,8 +71,7 @@ impl Transpiler {
         let mut hir = HIR::with_args(arguments);
 
         for stmt in body.iter() {
-            let macro_call = take_as!(stmt, Sexp::List)?;
-            self.translate_macro(&mut hir, &macro_call)?;
+            self.translate_macro(&mut hir.code, &stmt)?;
         }
 
         module.add(name.to_string()).hir(hir);
@@ -79,18 +79,34 @@ impl Transpiler {
         Ok(())
     }
 
-    fn translate_macro(&self, hir: &mut HIR, list: &[Sexp]) -> Result<(), String> {
+    fn translate_macro(&self, block: &mut Block, ast: &Sexp) -> Result<(), String> {
+        let list = take_as!(&ast, Sexp::List)?;
         let name = take_as!(&list[0], Sexp::Sym)?;
         // TODO: avoid index errors here
         let rest = &list[1..];
 
         match name.as_ref() {
-            "break" => {}
-            "continue" => {}
-            "if" => {}
+            "break" => block.push(Break::new()),
+            "continue" => block.push(Continue::new()),
+            "if" => {
+                let condition = self.translate_expr(&rest[0])?;
+                let branch = block.branch();
+                self.translate_macro(branch.add_condition(condition), &rest[1])?;
+                self.translate_macro(branch.default_condition(), &rest[2])?;
+            }
             "loop" => {}
-            "ret" => {}
+            "ret" => {
+                assert!(rest.len() <= 1);
+                let inx = if rest.is_empty() {
+                    Return::nil()
+                } else {
+                    let val = self.translate_expr(&rest[0])?;
+                    Return::value(val)
+                };
+                block.push(inx);
+            }
             _ => {
+                // TODO: use Call::with_args
                 let mut call = Call::new(name.as_ref());
 
                 for param in rest.iter() {
@@ -98,7 +114,7 @@ impl Transpiler {
                     call = call.arg(expr);
                 }
 
-                hir.push(call);
+                block.push(call);
             }
         }
 
@@ -132,7 +148,8 @@ impl Transpiler {
         if let Some(op) = self.operators.get(name.as_ref()) {
             Ok(Expr::from_opn(op.clone(), rest))
         } else {
-            Err(format!("unknown macro `{}`", name.as_ref()))
+            let call = Call::with_args(name.as_ref(), rest);
+            Ok(Expr::from(call))
         }
     }
 }
