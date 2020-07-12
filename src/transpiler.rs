@@ -92,9 +92,23 @@ impl Transpiler {
                 let condition = self.translate_expr(&rest[0])?;
                 let branch = block.branch();
                 self.translate_macro(branch.add_condition(condition), &rest[1])?;
-                self.translate_macro(branch.default_condition(), &rest[2])?;
+                if rest.len() == 3 {
+                    self.translate_macro(branch.default_condition(), &rest[2])?;
+                }
             }
-            "loop" => {}
+            "let" => {
+                assert_eq!(2, rest.len());
+                let name = take_as!(&rest[0], Sexp::Sym)?;
+                let name = Variable::from(name.to_string());
+                let val = self.translate_expr(&rest[1])?;
+                block.push(Assign::local(name, val));
+            }
+            "loop" => {
+                let repeat = block.repeat(None);
+                for item in rest.iter() {
+                    self.translate_macro(&mut repeat.block, item)?;
+                }
+            }
             "ret" => {
                 assert!(rest.len() <= 1);
                 let inx = if rest.is_empty() {

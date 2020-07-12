@@ -1,4 +1,4 @@
-(def run-loop ()
+(def main ()
     (let i 0)
     (loop
         (let i (+ i 1))
