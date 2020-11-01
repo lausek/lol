@@ -54,7 +54,7 @@ impl Transpiler {
             }
         }
 
-        builder.build()
+        builder.build().map_err(|e| format!("{:?}", e))
     }
 
     fn translate_define(&self, module: &mut ModuleBuilder, list: &[Sexp]) -> Result<(), String> {

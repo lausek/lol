@@ -3,6 +3,10 @@ use std::path::Path;
 
 use crate::transpiler::Transpiler;
 
+fn to_str(e: lovm2::prelude::Lovm2Error) -> String {
+    format!("{:?}", e)
+}
+
 pub struct Interpreter {
     vm: Vm,
 }
@@ -25,7 +29,9 @@ impl Interpreter {
         let mut trans = Transpiler::new();
         let module = trans.translate(&sexprs)?;
         println!("{:#?}", module);
-        self.vm.load_and_import_all(module)?;
-        self.vm.run()
+
+        self.vm.load_and_import_all(module).map_err(to_str)?;
+
+        self.vm.run().map_err(to_str)
     }
 }
