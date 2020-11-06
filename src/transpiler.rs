@@ -38,14 +38,40 @@ impl Transpiler {
         trans
     }
 
-    pub fn translate(&mut self, sexprs: &[Sexp]) -> Result<Module, String> {
-        let mut builder = ModuleBuilder::new();
+    pub fn process<T>(&mut self, path: T) -> Result<Module, String>
+    where
+        T: AsRef<std::path::Path>,
+    {
+        let source = std::fs::read_to_string(path.as_ref()).map_err(|e| format!("{}", e))?;
+        let (sexprs, err) = ess::parser::parse(source.as_ref());
+        if let Some(err) = err {
+            return Err(format!("{:?}", err));
+        }
 
+        // derive the module name from filepath
+        let modname = path.as_ref().file_stem().unwrap().to_string_lossy();
+
+        // build hir
+        let mut builder = ModuleBuilder::named(modname);
+        self.translate(&mut builder, &sexprs)?;
+
+        let mut module = builder.build().map_err(|e| format!("{:?}", e))?;
+        // specify the modules location
+        module.loc = Some(path.as_ref().display().to_string());
+
+        Ok(module)
+    }
+
+    pub fn translate(
+        &mut self,
+        builder: &mut ModuleBuilder,
+        sexprs: &[Sexp],
+    ) -> Result<(), String> {
         for sexpr in sexprs.iter() {
             match sexpr {
                 Sexp::List(list, _) => {
                     if let Some(Sexp::Sym(_, _)) = list.get(0) {
-                        self.translate_define(&mut builder, &list)?;
+                        self.translate_define(builder, &list)?;
                     } else {
                         unimplemented!()
                     }
@@ -54,7 +80,7 @@ impl Transpiler {
             }
         }
 
-        builder.build().map_err(|e| format!("{:?}", e))
+        Ok(())
     }
 
     fn translate_define(&self, module: &mut ModuleBuilder, list: &[Sexp]) -> Result<(), String> {

@@ -15,4 +15,4 @@ path = "src/lib.rs"
 [dependencies]
 clap = "2.33.1"
 ess = "0.4.2"
-lovm2 = "0.3.8"
+lovm2 = "0.4.0"

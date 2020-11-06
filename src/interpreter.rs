@@ -20,14 +20,9 @@ impl Interpreter {
     where
         T: AsRef<Path>,
     {
-        let source = std::fs::read_to_string(path).map_err(|e| format!("{}", e))?;
-        let (sexprs, err) = ess::parser::parse(source.as_ref());
-        if let Some(err) = err {
-            return Err(format!("{:?}", err));
-        }
-
         let mut trans = Transpiler::new();
-        let module = trans.translate(&sexprs)?;
+
+        let module = trans.process(path)?;
         println!("{:#?}", module);
 
         self.vm.load_and_import_all(module).map_err(to_str)?;
