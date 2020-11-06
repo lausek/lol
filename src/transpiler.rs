@@ -70,8 +70,12 @@ impl Transpiler {
         for sexpr in sexprs.iter() {
             match sexpr {
                 Sexp::List(list, _) => {
-                    if let Some(Sexp::Sym(_, _)) = list.get(0) {
-                        self.translate_define(builder, &list)?;
+                    if let Sexp::Sym(name, _) = &list[0] {
+                        match name.as_ref() {
+                            "def" => self.translate_define(builder, &list)?,
+                            "import" => self.translate_toplevel_import(builder, &list)?,
+                            _ => return Err(format!("unexpected keyword `{}`", name)),
+                        }
                     } else {
                         unimplemented!()
                     }
@@ -80,6 +84,16 @@ impl Transpiler {
             }
         }
 
+        Ok(())
+    }
+
+    fn translate_toplevel_import(
+        &self,
+        module: &mut ModuleBuilder,
+        list: &[Sexp],
+    ) -> Result<(), String> {
+        let name = take_as!(&list[1], Sexp::Sym)?;
+        module.add_dependency(name.to_string());
         Ok(())
     }
 
@@ -120,6 +134,10 @@ impl Transpiler {
                 if rest.len() == 3 {
                     self.translate_macro(branch.default_condition(), &rest[2])?;
                 }
+            }
+            "import" => {
+                let name = take_as!(&rest[0], Sexp::Sym)?;
+                block.push(Include::load(name.as_ref()));
             }
             "let" => {
                 assert_eq!(2, rest.len());
