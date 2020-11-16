@@ -47,15 +47,17 @@ impl Transpiler {
     }
 
     pub fn build(&mut self, meta: ModuleMeta, source: String) -> Result<Module, String> {
-        let (sexprs, err) = ess::parser::parse(source.as_ref());
-        if let Some(err) = err {
-            return Err(format!("{:?}", err));
-        }
-
         let mut builder = ModuleBuilder::with_meta(meta);
 
-        // build hir
-        self.translate(&mut builder, &sexprs)?;
+        if !source.is_empty() {
+            let (sexprs, err) = ess::parser::parse(source.as_ref());
+            if let Some(err) = err {
+                return Err(format!("{:?}", err));
+            }
+
+            // build hir
+            self.translate(&mut builder, &sexprs)?;
+        }
 
         let module = builder.build().map_err(|e| format!("{:?}", e))?;
 

@@ -86,8 +86,8 @@ where
 }
 
 fn main() {
-    let app = App::new("lol")
-        .version("0.0.1")
+    let mut app = App::new("lol")
+        .version("0.1.0")
         .author("lausek")
         .about("lol - lausek's own lisp")
         .subcommand(
@@ -96,7 +96,7 @@ fn main() {
                 .arg(Arg::with_name("FILE").help("the name of the file to run")),
         )
         .subcommand(SubCommand::with_name("build").about("build the current directory"));
-    let matches = app.get_matches();
+    let matches = app.clone().get_matches();
 
     match matches.subcommand() {
         ("build", _) => {
@@ -110,6 +110,6 @@ fn main() {
                 .map(|fname| std::fs::canonicalize(fname).unwrap());
             run(fname);
         }
-        _ => panic!("no subcommand"),
+        _ => app.print_help().unwrap(),
     }
 }
