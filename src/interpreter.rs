@@ -1,5 +1,5 @@
-use lovm2::module::ModuleProtocol;
 use lovm2::prelude::*;
+use lovm2::module::Module;
 use lovm2::vm::Vm;
 use std::path::Path;
 
@@ -9,13 +9,19 @@ fn to_str(e: lovm2::prelude::Lovm2Error) -> String {
     format!("{:?}", e)
 }
 
-fn load_hook(req: &lovm2::context::LoadRequest) -> Lovm2Result<Option<GenericModule>> {
+fn import_hook(module: &str, name: &str) -> String {
+    if module.is_empty() {
+        return name.to_string();
+    }
+    format!("{}.{}", module, name)
+}
+
+fn load_hook(req: &lovm2::context::LoadRequest) -> Lovm2Result<Option<Module>> {
     if let Ok(path) = lovm2::context::find_candidate(req) {
-        use std::rc::Rc;
         let mut trans = Transpiler::new();
         return trans
             .process(path)
-            .map(|m| Some(Rc::new(m) as Rc<dyn ModuleProtocol>))
+            .map(|m| Some(m))
             .map_err(|e| e.into());
     }
 
@@ -28,8 +34,9 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Self {
-        let mut vm = Vm::new();
+        let mut vm = Vm::with_std();
 
+        vm.context_mut().set_import_hook(import_hook);
         vm.context_mut().set_load_hook(load_hook);
 
         Self { vm }

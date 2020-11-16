@@ -53,11 +53,11 @@ impl Transpiler {
 
         // build hir
         let mut builder = ModuleBuilder::named(modname);
+        // specify the modules location
+        builder.loc = Some(path.as_ref().display().to_string());
         self.translate(&mut builder, &sexprs)?;
 
-        let mut module = builder.build().map_err(|e| format!("{:?}", e))?;
-        // specify the modules location
-        module.loc = Some(path.as_ref().display().to_string());
+        let module = builder.build().map_err(|e| format!("{:?}", e))?;
 
         Ok(module)
     }

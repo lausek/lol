@@ -8,7 +8,9 @@ where
     T: AsRef<Path>,
 {
     let mut int = Interpreter::new();
-    int.run_source(path).expect("running failed");
+    if let Err(e) = int.run_source(path) {
+        println!("{:?}", e);
+    }
 }
 
 fn main() {

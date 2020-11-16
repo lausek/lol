@@ -15,5 +15,4 @@ path = "src/lib.rs"
 [dependencies]
 clap = "2.33.1"
 ess = "0.4.2"
-#lovm2 = "0.4.0"
-lovm2 = { git = "https://github.com/lausek/lovm2" }
+lovm2 = "0.4.5"
