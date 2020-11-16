@@ -1,7 +1,5 @@
 use ess::Sexp;
-use lovm2::hir::block::Block;
-use lovm2::hir::prelude::*;
-use lovm2::module::Module;
+use lovm2::prelude::*;
 use std::collections::HashMap;
 
 macro_rules! take_as {
@@ -38,23 +36,25 @@ impl Transpiler {
         trans
     }
 
-    pub fn process<T>(&mut self, path: T) -> Result<Module, String>
+    pub fn build_from_source<T>(&mut self, path: T) -> Result<Module, String>
     where
         T: AsRef<std::path::Path>,
     {
         let source = std::fs::read_to_string(path.as_ref()).map_err(|e| format!("{}", e))?;
+        // derive the module name and location from filepath
+        let meta: ModuleMeta = path.as_ref().into();
+        self.build(meta, source)
+    }
+
+    pub fn build(&mut self, meta: ModuleMeta, source: String) -> Result<Module, String> {
         let (sexprs, err) = ess::parser::parse(source.as_ref());
         if let Some(err) = err {
             return Err(format!("{:?}", err));
         }
 
-        // derive the module name from filepath
-        let modname = path.as_ref().file_stem().unwrap().to_string_lossy();
+        let mut builder = ModuleBuilder::with_meta(meta);
 
         // build hir
-        let mut builder = ModuleBuilder::named(modname);
-        // specify the modules location
-        builder.loc = Some(path.as_ref().display().to_string());
         self.translate(&mut builder, &sexprs)?;
 
         let module = builder.build().map_err(|e| format!("{:?}", e))?;
@@ -62,11 +62,7 @@ impl Transpiler {
         Ok(module)
     }
 
-    pub fn translate(
-        &mut self,
-        builder: &mut ModuleBuilder,
-        sexprs: &[Sexp],
-    ) -> Result<(), String> {
+    fn translate(&mut self, builder: &mut ModuleBuilder, sexprs: &[Sexp]) -> Result<(), String> {
         for sexpr in sexprs.iter() {
             match sexpr {
                 Sexp::List(list, _) => {
