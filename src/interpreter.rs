@@ -14,16 +14,29 @@ fn import_hook(module: &str, name: &str) -> String {
     format!("{}.{}", module, name)
 }
 
+fn load_lol_module<T>(path: T) -> Result<Module, String>
+where
+    T: AsRef<Path>,
+{
+    match path.as_ref().extension() {
+        Some(ext) if ext == LOL_EXTENSION => {
+            let mut trans = Transpiler::new();
+            trans.build_from_source(path)
+        }
+        Some(ext) if ext == LOLC_EXTENSION => {
+            Module::load_from_file(path).map_err(|e| format!("{:?}", e))
+        }
+        _ => Err("invalid file extension".to_string()),
+    }
+}
+
 fn load_hook(req: &lovm2::context::LoadRequest) -> Lovm2Result<Option<Module>> {
     if let Ok(path) = lovm2::context::find_candidate(req) {
-        let mut trans = Transpiler::new();
-        return trans
-            .build_from_source(path)
-            .map(|m| Some(m))
-            .map_err(|e| e.into());
+        let module = load_lol_module(path)?;
+        Ok(Some(module))
+    } else {
+        Ok(None)
     }
-
-    Ok(None)
 }
 
 pub struct Interpreter {
@@ -64,16 +77,7 @@ impl Interpreter {
     where
         T: AsRef<Path>,
     {
-        let module = match path.as_ref().extension() {
-            Some(ext) if ext == LOL_EXTENSION => {
-                let mut trans = Transpiler::new();
-                trans.build_from_source(path)
-            }
-            Some(ext) if ext == LOLC_EXTENSION => {
-                Module::load_from_file(path).map_err(|e| format!("{:?}", e))
-            }
-            _ => Err("invalid file extension".to_string()),
-        }?;
+        let module = load_lol_module(path)?;
 
         self.vm.load_and_import_all(module)?;
 

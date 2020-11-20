@@ -32,7 +32,7 @@ fn build(path: PathBuf) -> Option<PathBuf> {
     srcdir.push("src");
     find_files(&srcdir, &mut files).unwrap();
 
-    let mut targetdir = path.clone();
+    let mut targetdir = path;
     targetdir.push("target");
     targetdir.push("lol");
     std::fs::create_dir_all(&targetdir).unwrap();
