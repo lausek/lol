@@ -128,6 +128,11 @@ impl Transpiler {
         match name.as_ref() {
             "break" => block.push(Break::new()),
             "continue" => block.push(Continue::new()),
+            "do" => {
+                for step in rest.iter() {
+                    self.translate_macro(block, step)?;
+                }
+            }
             "if" => {
                 let condition = self.translate_expr(&rest[0])?;
                 let branch = block.branch();

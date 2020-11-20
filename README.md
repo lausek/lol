@@ -29,6 +29,7 @@ and
 or
 break
 continue
+do
 if
 import
 let

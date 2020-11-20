@@ -75,12 +75,12 @@ fn looping() {
             (let r 1)
             (let i 0)
             (loop
-                (print r \"\n\")
                 (if (eq i n)
                     (break))
                 (if (eq (% i 2) 0)
-                    (let i (+ i 1))
-                    (continue))
+                    (do
+                        (let i (+ i 1))
+                        (continue)))
                 (let r (* r i))
                 (let i (+ i 1)))
             (ret r))
@@ -89,5 +89,5 @@ fn looping() {
 
     assert_eq!(Value::from(1), int.call("looping", &[1]).unwrap());
     assert_eq!(Value::from(1), int.call("looping", &[2]).unwrap());
-    assert_eq!(Value::from(1), int.call("looping", &[5]).unwrap());
+    assert_eq!(Value::from(3), int.call("looping", &[5]).unwrap());
 }
