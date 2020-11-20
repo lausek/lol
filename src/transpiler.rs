@@ -46,10 +46,13 @@ impl Transpiler {
         self.build(meta, source)
     }
 
-    pub fn build(&mut self, meta: ModuleMeta, source: String) -> Result<Module, String> {
+    pub fn build<T>(&mut self, meta: ModuleMeta, source: T) -> Result<Module, String>
+    where
+        T: AsRef<str>,
+    {
         let mut builder = ModuleBuilder::with_meta(meta);
 
-        if !source.is_empty() {
+        if !source.as_ref().is_empty() {
             let (sexprs, err) = ess::parser::parse(source.as_ref());
             if let Some(err) = err {
                 return Err(format!("{:?}", err));
@@ -183,7 +186,7 @@ impl Transpiler {
     fn translate_expr_macro(&self, list: &[Sexp]) -> Result<Expr, String> {
         let name = take_as!(&list[0], Sexp::Sym)?;
         // TODO: avoid index errors here
-        let rest = self.to_expr_vec(&list[1..])?;
+        let mut rest = self.to_expr_vec(&list[1..])?;
 
         if name.as_ref() == "not" {
             assert_eq!(1, rest.len());
@@ -191,6 +194,12 @@ impl Transpiler {
         }
 
         if let Some(op) = self.operators.get(name.as_ref()) {
+            if *op == Operator2::Div {
+                let first = rest.remove(0);
+                let first = Cast::to_float(first);
+                rest.insert(0, first.into());
+            }
+
             Ok(Expr::from_opn(op.clone(), rest))
         } else {
             let call = Call::with_args(name.as_ref(), rest);

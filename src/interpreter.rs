@@ -1,3 +1,4 @@
+use lovm2::context::Context;
 use lovm2::module::Module;
 use lovm2::prelude::*;
 use lovm2::vm::Vm;
@@ -5,10 +6,6 @@ use std::path::Path;
 
 use crate::transpiler::Transpiler;
 use crate::{LOLC_EXTENSION, LOL_EXTENSION};
-
-fn to_str(e: lovm2::prelude::Lovm2Error) -> String {
-    format!("{:?}", e)
-}
 
 fn import_hook(module: &str, name: &str) -> String {
     if module.is_empty() {
@@ -43,22 +40,27 @@ impl Interpreter {
         Self { vm }
     }
 
-    /*
-    pub fn run_source<T>(&mut self, path: T) -> Result<(), String>
-    where
-        T: AsRef<Path>,
-    {
-        let mut trans = Transpiler::new();
-
-        let module = trans.build_from_source(path)?;
-
-        self.vm.load_and_import_all(module).map_err(to_str)?;
-
-        self.vm.run().map_err(to_str)
+    pub fn context_mut(&mut self) -> &mut Context {
+        self.vm.context_mut()
     }
-    */
 
-    pub fn run<T>(&mut self, path: T) -> Result<(), String>
+    pub fn call<T>(&mut self, name: &str, args: &[T]) -> Lovm2Result<Value>
+    where
+        T: Into<Value> + Clone,
+    {
+        let args: Vec<Value> = args.iter().map(T::clone).map(T::into).collect();
+        self.vm.call(name, args.as_ref())
+    }
+
+    pub fn load(&mut self, module: Module) -> Lovm2Result<()> {
+        self.vm.load_and_import_all(module)
+    }
+
+    pub fn run(&mut self) -> Lovm2Result<()> {
+        self.vm.run()
+    }
+
+    pub fn run_from_path<T>(&mut self, path: T) -> Lovm2Result<()>
     where
         T: AsRef<Path>,
     {
@@ -73,8 +75,8 @@ impl Interpreter {
             _ => Err("invalid file extension".to_string()),
         }?;
 
-        self.vm.load_and_import_all(module).map_err(to_str)?;
+        self.vm.load_and_import_all(module)?;
 
-        self.vm.run().map_err(to_str)
+        self.vm.run()
     }
 }

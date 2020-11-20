@@ -67,7 +67,7 @@ where
 
     match path {
         Some(path) => {
-            if let Err(e) = int.run(path) {
+            if let Err(e) = int.run_from_path(path) {
                 println!("{:?}", e);
             }
         }
@@ -75,7 +75,7 @@ where
             let dir = std::env::current_dir().unwrap();
             match build(dir) {
                 Some(main) => {
-                    if let Err(e) = int.run(main) {
+                    if let Err(e) = int.run_from_path(main) {
                         println!("{:?}", e);
                     }
                 }
