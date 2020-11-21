@@ -1,7 +1,6 @@
 #![cfg(test)]
 
-use lol::interpreter::Interpreter;
-use lol::transpiler::Transpiler;
+use lol::{Interpreter, Transpiler};
 use lovm2::prelude::*;
 
 macro_rules! add_module {

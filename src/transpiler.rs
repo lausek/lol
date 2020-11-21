@@ -1,6 +1,5 @@
 use ess::Sexp;
 use lovm2::prelude::*;
-use std::collections::HashMap;
 
 macro_rules! take_as {
     ($expr:expr, $ty:path) => {
@@ -11,29 +10,30 @@ macro_rules! take_as {
     };
 }
 
-pub struct Transpiler {
-    operators: HashMap<&'static str, Operator2>,
-}
+pub struct Transpiler;
 
 impl Transpiler {
     pub fn new() -> Self {
-        let mut trans = Self {
-            operators: HashMap::new(),
-        };
-        trans.operators.insert("+", Operator2::Add);
-        trans.operators.insert("-", Operator2::Sub);
-        trans.operators.insert("*", Operator2::Mul);
-        trans.operators.insert("/", Operator2::Div);
-        trans.operators.insert("%", Operator2::Rem);
-        trans.operators.insert("eq", Operator2::Equal);
-        trans.operators.insert("ne", Operator2::NotEqual);
-        trans.operators.insert("ge", Operator2::GreaterEqual);
-        trans.operators.insert("gt", Operator2::GreaterThan);
-        trans.operators.insert("le", Operator2::LessEqual);
-        trans.operators.insert("lt", Operator2::LessThan);
-        trans.operators.insert("and", Operator2::And);
-        trans.operators.insert("or", Operator2::Or);
-        trans
+        Self
+    }
+
+    fn maps_to_operator(&self, name: &str) -> Option<Operator2> {
+        match name {
+            "+" => Some(Operator2::Add),
+            "-" => Some(Operator2::Sub),
+            "*" => Some(Operator2::Mul),
+            "/" => Some(Operator2::Div),
+            "%" => Some(Operator2::Rem),
+            "eq" => Some(Operator2::Equal),
+            "ne" => Some(Operator2::NotEqual),
+            "ge" => Some(Operator2::GreaterEqual),
+            "gt" => Some(Operator2::GreaterThan),
+            "le" => Some(Operator2::LessEqual),
+            "lt" => Some(Operator2::LessThan),
+            "and" => Some(Operator2::And),
+            "or" => Some(Operator2::Or),
+            _ => None,
+        }
     }
 
     pub fn build_from_path<T>(&mut self, path: T) -> Result<Module, String>
@@ -198,14 +198,16 @@ impl Transpiler {
             return Ok(Expr::not(rest[0].clone()));
         }
 
-        if let Some(op) = self.operators.get(name.as_ref()) {
-            if *op == Operator2::Div {
+        if let Some(op) = self.maps_to_operator(name.as_ref()) {
+            // automatically turn first operand into float to
+            // avoid information loss on integer division
+            if op == Operator2::Div {
                 let first = rest.remove(0);
                 let first = Cast::to_float(first);
                 rest.insert(0, first.into());
             }
 
-            Ok(Expr::from_opn(op.clone(), rest))
+            Ok(Expr::from_opn(op, rest))
         } else {
             let call = Call::with_args(name.as_ref(), rest);
             Ok(Expr::from(call))
