@@ -1,25 +1,11 @@
 #![cfg(test)]
 
-use lol::{Interpreter, Transpiler};
+use lol::create_lol_runtime;
 use lovm2::prelude::*;
-
-macro_rules! add_module {
-    ($name:expr, $src:expr) => {{
-        let mut int = Interpreter::new();
-        let mut trans = Transpiler::new();
-        let meta: ModuleMeta = $name.to_string().into();
-        let module = trans.build(meta, $src).unwrap();
-
-        println!("{}", module);
-
-        int.load(module).unwrap();
-        int
-    }};
-}
 
 #[test]
 fn arithmetic() {
-    let mut int = add_module!(
+    let mut int = create_lol_runtime!(
         "main",
         "
         (def add (a b)
@@ -49,7 +35,7 @@ fn arithmetic() {
 
 #[test]
 fn recursive_faculty() {
-    let mut int = add_module!(
+    let mut int = create_lol_runtime!(
         "main",
         "
         (def fac (x) 
@@ -67,7 +53,7 @@ fn recursive_faculty() {
 
 #[test]
 fn looping() {
-    let mut int = add_module!(
+    let mut int = create_lol_runtime!(
         "loops",
         "
         (def looping (n)

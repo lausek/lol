@@ -1,5 +1,6 @@
 pub mod interpreter;
 pub mod transpiler;
+pub mod util;
 
 pub use crate::interpreter::Interpreter;
 pub use crate::transpiler::Transpiler;
