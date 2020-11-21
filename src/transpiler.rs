@@ -46,7 +46,7 @@ impl Transpiler {
         self.build(meta, source)
     }
 
-    pub fn build<T>(&mut self, meta: ModuleMeta, source: T) -> Result<Module, String>
+    pub fn build<T>(&mut self, meta: lovm2::module::meta::ModuleMeta, source: T) -> Result<Module, String>
     where
         T: AsRef<str>,
     {

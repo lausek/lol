@@ -5,7 +5,7 @@ use lovm2::prelude::*;
 
 #[test]
 fn arithmetic() {
-    let mut int = create_lol_runtime!(
+    let mut int = create_lol_runtime(
         "main",
         "
         (def add (a b)
@@ -35,7 +35,7 @@ fn arithmetic() {
 
 #[test]
 fn recursive_faculty() {
-    let mut int = create_lol_runtime!(
+    let mut int = create_lol_runtime(
         "main",
         "
         (def fac (x) 
@@ -53,7 +53,7 @@ fn recursive_faculty() {
 
 #[test]
 fn looping() {
-    let mut int = create_lol_runtime!(
+    let mut int = create_lol_runtime(
         "loops",
         "
         (def looping (n)

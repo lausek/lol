@@ -1,22 +1,17 @@
-#[macro_export]
-macro_rules! create_lol_module {
-    ($name:expr, $src:expr) => {{
-        let mut trans = lol::Transpiler::new();
-        let meta: lovm2::module::meta::ModuleMeta = $name.to_string().into();
-        let module = trans.build(meta, $src).unwrap();
-        module
-    }};
+pub fn create_lol_module(name: &str, src: &str) -> lovm2::prelude::Lovm2Result<lovm2::module::Module>
+{
+    let mut trans = crate::Transpiler::new();
+    let meta: lovm2::module::meta::ModuleMeta = name.to_string().into();
+    let module: lovm2::module::Module = trans.build(meta, src).unwrap();
+    Ok(module)
 }
 
-#[macro_export]
-macro_rules! create_lol_runtime {
-    ($name:expr, $src:expr) => {{
-        let mut int = lol::Interpreter::new();
-        let module = lol::create_lol_module!($name, $src);
+pub fn create_lol_runtime(name: &str, src: &str) -> crate::Interpreter {
+    let mut int = crate::Interpreter::new();
+    let module = crate::create_lol_module(name, src).unwrap();
 
-        println!("{}", module);
+    println!("{}", module);
 
-        int.load(module).unwrap();
-        int
-    }};
+    int.load(module).unwrap();
+    int
 }
