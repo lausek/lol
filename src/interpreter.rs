@@ -21,7 +21,7 @@ where
     match path.as_ref().extension() {
         Some(ext) if ext == LOL_EXTENSION => {
             let mut trans = Transpiler::new();
-            trans.build_from_source(path)
+            trans.build_from_path(path)
         }
         Some(ext) if ext == LOLC_EXTENSION => {
             Module::load_from_file(path).map_err(|e| format!("{:?}", e))

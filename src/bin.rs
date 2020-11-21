@@ -47,7 +47,7 @@ fn build(path: PathBuf) -> Option<PathBuf> {
 
         println!("building {} ...", file.to_str().unwrap());
 
-        let module = transpiler.build_from_source(file).unwrap();
+        let module = transpiler.build_from_path(file).unwrap();
 
         module.store_to_file(&targetfile).unwrap();
 

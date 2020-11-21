@@ -36,7 +36,7 @@ impl Transpiler {
         trans
     }
 
-    pub fn build_from_source<T>(&mut self, path: T) -> Result<Module, String>
+    pub fn build_from_path<T>(&mut self, path: T) -> Result<Module, String>
     where
         T: AsRef<std::path::Path>,
     {
