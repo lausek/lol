@@ -18,7 +18,7 @@ fn arithmetic() {
             (ret (/ a b)))
         (def rem (a b)
             (ret (% a b)))
-        "
+        ",
     );
 
     let add = int.call("add", &[1, 2]).unwrap();
@@ -42,7 +42,7 @@ fn recursive_faculty() {
             (if (not (eq x 0))
                 (ret (* x (fac (- x 1))))
                 (ret 1)))
-        "
+        ",
     );
 
     assert_eq!(Value::from(1), int.call("fac", &[1]).unwrap());
@@ -69,7 +69,7 @@ fn looping() {
                 (let r (* r i))
                 (let i (+ i 1)))
             (ret r))
-        "
+        ",
     );
 
     assert_eq!(Value::from(1), int.call("looping", &[1]).unwrap());

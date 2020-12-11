@@ -33,10 +33,9 @@ where
 fn load_hook(req: &lovm2::context::LoadRequest) -> Lovm2Result<Option<Module>> {
     if let Ok(path) = lovm2::context::find_candidate(req) {
         let module = load_lol_module(path)?;
-        Ok(Some(module))
-    } else {
-        Ok(None)
+        return Ok(Some(module));
     }
+    Ok(None)
 }
 
 pub struct Interpreter {

@@ -46,7 +46,11 @@ impl Transpiler {
         self.build(meta, source)
     }
 
-    pub fn build<T>(&mut self, meta: lovm2::module::meta::ModuleMeta, source: T) -> Result<Module, String>
+    pub fn build<T>(
+        &mut self,
+        meta: lovm2::module::meta::ModuleMeta,
+        source: T,
+    ) -> Result<Module, String>
     where
         T: AsRef<str>,
     {
@@ -108,13 +112,11 @@ impl Transpiler {
 
         // TODO: avoid index errors here
         let body = &list[3..];
-        let mut hir = HIR::with_args(arguments);
+        let hir = module.add_with_args(name.to_string(), arguments);
 
         for stmt in body.iter() {
             self.translate_macro(&mut hir.code, &stmt)?;
         }
-
-        module.add(name.to_string()).hir(hir);
 
         Ok(())
     }
@@ -126,8 +128,8 @@ impl Transpiler {
         let rest = &list[1..];
 
         match name.as_ref() {
-            "break" => block.push(Break::new()),
-            "continue" => block.push(Continue::new()),
+            "break" => block.step(Break::new()),
+            "continue" => block.step(Continue::new()),
             "do" => {
                 for step in rest.iter() {
                     self.translate_macro(block, step)?;
@@ -143,17 +145,17 @@ impl Transpiler {
             }
             "import" => {
                 let name = take_as!(&rest[0], Sexp::Sym)?;
-                block.push(Include::load(name.as_ref()));
+                block.step(Include::load(name.as_ref()));
             }
             "let" => {
                 assert_eq!(2, rest.len());
                 let name = take_as!(&rest[0], Sexp::Sym)?;
                 let name = Variable::from(name.to_string());
                 let val = self.translate_expr(&rest[1])?;
-                block.push(Assign::local(name, val));
+                block.step(Assign::local(&name, val));
             }
             "loop" => {
-                let repeat = block.repeat(None);
+                let repeat = block.repeat();
                 for item in rest.iter() {
                     self.translate_macro(&mut repeat.block, item)?;
                 }
@@ -166,11 +168,11 @@ impl Transpiler {
                     let val = self.translate_expr(&rest[0])?;
                     Return::value(val)
                 };
-                block.push(inx);
+                block.step(inx);
             }
             _ => {
                 let args = self.to_expr_vec(rest)?;
-                block.push(Call::with_args(name.as_ref(), args));
+                block.step(Call::with_args(name.as_ref(), args));
             }
         }
 
@@ -181,7 +183,7 @@ impl Transpiler {
         match sexp {
             Sexp::Sym(name, _) => Ok(Expr::from(Variable::from(name.to_string()))),
             Sexp::Str(s, _) => Ok(Expr::from(s.as_ref())),
-            Sexp::Char(c, _) => Ok(Expr::from(format!("{}", c).as_ref())),
+            Sexp::Char(c, _) => Ok(Expr::from(format!("{}", c))),
             Sexp::Int(n, _) => Ok(Expr::from(*n)),
             Sexp::Float(n, _) => Ok(Expr::from(*n)),
             Sexp::List(list, _) => self.translate_expr_macro(list),
