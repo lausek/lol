@@ -145,7 +145,7 @@ impl Transpiler {
             }
             "import" => {
                 let name = take_as!(&rest[0], Sexp::Sym)?;
-                block.step(Include::load(name.as_ref()));
+                block.step(Include::import(name.as_ref()));
             }
             "let" => {
                 assert_eq!(2, rest.len());

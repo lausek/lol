@@ -14,6 +14,6 @@ pub fn create_lol_runtime(name: &str, src: &str) -> crate::Interpreter {
 
     println!("{}", module);
 
-    int.load(module).unwrap();
+    int.load_global(module).unwrap();
     int
 }

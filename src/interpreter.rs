@@ -7,13 +7,6 @@ use std::path::Path;
 use crate::transpiler::Transpiler;
 use crate::{LOLC_EXTENSION, LOL_EXTENSION};
 
-fn import_hook(module: &str, name: &str) -> String {
-    if module.is_empty() {
-        return name.to_string();
-    }
-    format!("{}.{}", module, name)
-}
-
 fn load_lol_module<T>(path: T) -> Result<Module, String>
 where
     T: AsRef<Path>,
@@ -30,12 +23,19 @@ where
     }
 }
 
-fn load_hook(req: &lovm2::context::LoadRequest) -> Lovm2Result<Option<Module>> {
-    if let Ok(path) = lovm2::context::find_candidate(req) {
+fn load_hook(req: &lovm2::vm::LoadRequest) -> Lovm2Result<Option<Module>> {
+    if let Ok(path) = lovm2::vm::find_candidate(req) {
         let module = load_lol_module(path)?;
         return Ok(Some(module));
     }
     Ok(None)
+}
+
+fn import_hook(module: Option<&str>, name: &str) -> String {
+    match module {
+        Some(module) => format!("{}-{}", module, name),
+        _ => name.to_string(),
+    }
 }
 
 pub struct Interpreter {
@@ -46,8 +46,8 @@ impl Interpreter {
     pub fn new() -> Self {
         let mut vm = Vm::with_std();
 
-        vm.context_mut().set_import_hook(import_hook);
-        vm.context_mut().set_load_hook(load_hook);
+        vm.set_load_hook(load_hook);
+        vm.set_import_hook(import_hook);
 
         Self { vm }
     }
@@ -65,20 +65,30 @@ impl Interpreter {
     }
 
     pub fn load(&mut self, module: Module) -> Lovm2Result<()> {
-        self.vm.load_and_import_all(module)
+        // import module namespaced
+        self.vm.add_module(module, true)
     }
 
-    pub fn run(&mut self) -> Lovm2Result<()> {
+    pub fn load_global(&mut self, module: Module) -> Lovm2Result<()> {
+        // import module namespaced
+        self.vm.add_module(module, false)
+    }
+
+    pub fn load_main(&mut self, module: Module) -> Lovm2Result<()> {
+        self.vm.add_main_module(module)
+    }
+
+    pub fn run(&mut self) -> Lovm2Result<Value> {
         self.vm.run()
     }
 
-    pub fn run_from_path<T>(&mut self, path: T) -> Lovm2Result<()>
+    pub fn run_from_path<T>(&mut self, path: T) -> Lovm2Result<Value>
     where
         T: AsRef<Path>,
     {
         let module = load_lol_module(path)?;
 
-        self.vm.load_and_import_all(module)?;
+        self.vm.add_main_module(module)?;
 
         self.vm.run()
     }

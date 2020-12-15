@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use lol::create_lol_runtime;
+use lol::{create_lol_module, create_lol_runtime, Interpreter};
 use lovm2::prelude::*;
 
 #[test]
@@ -75,4 +75,31 @@ fn looping() {
     assert_eq!(Value::from(1), int.call("looping", &[1]).unwrap());
     assert_eq!(Value::from(1), int.call("looping", &[2]).unwrap());
     assert_eq!(Value::from(3), int.call("looping", &[5]).unwrap());
+}
+
+#[test]
+fn import_vice_versa() {
+    let mut int = Interpreter::new();
+    let a = create_lol_module(
+        "a",
+        "
+    (import b)
+    (def main (x)
+        (ret (b-inb)))
+        ",
+    )
+    .unwrap();
+    let b = create_lol_module(
+        "b",
+        "
+    (def inb ()
+        (ret 1))
+        ",
+    )
+    .unwrap();
+
+    int.load(b).unwrap();
+    int.load(a).unwrap();
+
+    assert!(int.call("a-main", &[0]).is_ok());
 }
