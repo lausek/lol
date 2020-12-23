@@ -46,11 +46,7 @@ impl Transpiler {
         self.build(meta, source)
     }
 
-    pub fn build<T>(
-        &mut self,
-        meta: lovm2::module::meta::ModuleMeta,
-        source: T,
-    ) -> Result<Module, String>
+    pub fn build<T>(&mut self, meta: lovm2::module::ModuleMeta, source: T) -> Result<Module, String>
     where
         T: AsRef<str>,
     {
@@ -115,7 +111,7 @@ impl Transpiler {
         let hir = module.add_with_args(name.to_string(), arguments);
 
         for stmt in body.iter() {
-            self.translate_macro(&mut hir.code, &stmt)?;
+            self.translate_macro(hir.block_mut(), &stmt)?;
         }
 
         Ok(())
@@ -147,6 +143,10 @@ impl Transpiler {
                 let name = take_as!(&rest[0], Sexp::Sym)?;
                 block.step(Include::import(name.as_ref()));
             }
+            "import-global" => {
+                let name = take_as!(&rest[0], Sexp::Sym)?;
+                block.step(Include::import_global(name.as_ref()));
+            }
             "let" => {
                 assert_eq!(2, rest.len());
                 let name = take_as!(&rest[0], Sexp::Sym)?;
@@ -157,7 +157,7 @@ impl Transpiler {
             "loop" => {
                 let repeat = block.repeat();
                 for item in rest.iter() {
-                    self.translate_macro(&mut repeat.block, item)?;
+                    self.translate_macro(repeat.block_mut(), item)?;
                 }
             }
             "ret" => {

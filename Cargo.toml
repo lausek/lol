@@ -16,4 +16,4 @@ path = "src/lib.rs"
 clap = "2.33.1"
 ess = "0.4.2"
 #lovm2 = "0.4.5"
-lovm2 = { git = "https://github.com/lausek/lovm2" }
+lovm2 = { git = "https://github.com/lausek/lovm2", branch = "v0.4.8" }

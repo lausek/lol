@@ -1,7 +1,6 @@
-use lovm2::context::Context;
 use lovm2::module::Module;
 use lovm2::prelude::*;
-use lovm2::vm::Vm;
+use lovm2::vm::{Context, Vm};
 use std::path::Path;
 
 use crate::transpiler::Transpiler;
@@ -32,6 +31,7 @@ fn load_hook(req: &lovm2::vm::LoadRequest) -> Lovm2Result<Option<Module>> {
 }
 
 fn import_hook(module: Option<&str>, name: &str) -> String {
+    let name = name.replace("_", "-");
     match module {
         Some(module) => format!("{}-{}", module, name),
         _ => name.to_string(),
