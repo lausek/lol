@@ -32,6 +32,7 @@ continue
 do
 if
 import
+import-global
 let
 loop
 ret
