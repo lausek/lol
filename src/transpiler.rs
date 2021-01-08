@@ -46,7 +46,11 @@ impl Transpiler {
         self.build(meta, source)
     }
 
-    pub fn build<T>(&mut self, meta: lovm2::module::ModuleMeta, source: T) -> Result<Module, String>
+    pub fn build<T>(
+        &mut self,
+        meta: lovm2::prelude::ModuleMeta,
+        source: T,
+    ) -> Result<Module, String>
     where
         T: AsRef<str>,
     {
@@ -205,7 +209,7 @@ impl Transpiler {
             // avoid information loss on integer division
             if op == Operator2::Div {
                 let first = rest.remove(0);
-                let first = Cast::to_float(first);
+                let first = Conv::to_float(first);
                 rest.insert(0, first.into());
             }
 
