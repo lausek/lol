@@ -44,7 +44,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Self {
-        let mut vm = Vm::with_std();
+        let mut vm = lovm2::create_vm_with_std();
 
         vm.set_load_hook(load_hook);
         vm.set_import_hook(import_hook);
