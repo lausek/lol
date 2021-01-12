@@ -154,3 +154,29 @@ fn foreach() {
     assert_eq!(Value::from(10), int.call("sum", &[4]).unwrap());
     assert_eq!(Value::from(15), int.call("sum", &[5]).unwrap());
 }
+
+#[test]
+fn converting() {
+    let mut int = Interpreter::new();
+    let main = create_lol_module(
+        "main",
+        r#"
+    (def as-bool (n)
+        (ret (bool n)))
+    (def as-float (n)
+        (ret (float n)))
+    (def as-int (n)
+        (ret (int n)))
+    (def as-str (n)
+        (ret (str n)))
+    "#,
+    )
+    .unwrap();
+
+    int.load_global(main).unwrap();
+
+    assert_eq!(Value::from(true), int.call("as-bool", &[3]).unwrap());
+    assert_eq!(Value::from(5.), int.call("as-float", &[5]).unwrap());
+    assert_eq!(Value::from(1), int.call("as-int", &[true]).unwrap());
+    assert_eq!(Value::from("4"), int.call("as-str", &[4]).unwrap());
+}

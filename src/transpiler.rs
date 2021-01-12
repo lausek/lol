@@ -224,6 +224,19 @@ impl Transpiler {
             Ok(Expr::from_opn(op, rest))
         } else {
             match name.as_ref() {
+                "bool" | "float" | "int" | "str" => {
+                    assert_eq!(2, list.len());
+                    let expr = self.translate_expr(&list[1])?;
+
+                    Ok(match name.as_ref() {
+                        "bool" => Conv::to_bool(expr),
+                        "float" => Conv::to_float(expr),
+                        "int" => Conv::to_integer(expr),
+                        "str" => Conv::to_str(expr),
+                        _ => unreachable!(),
+                    }
+                    .into())
+                }
                 "dict" => {
                     let mut dict = Initialize::new(Value::dict().into());
 
@@ -258,22 +271,11 @@ impl Transpiler {
                 }
                 "range" => {
                     let rest = self.to_expr_vec(&list[1..])?;
-                    //let (mut from, mut to): (Expr, Expr) = (Value::Nil.into(), Value::Nil.into());
                     let (from, to): (Expr, Expr) = match rest.as_slice() {
                         [first] => (Value::Nil.into(), first.clone()),
                         [first, second] => (first.clone(), second.clone()),
                         _ => unimplemented!(),
                     };
-                    /*
-                    let first = &rest[0];
-
-                    if let Some(second) = rest.get(1) {
-                        from = first;
-                        to = second;
-                    } else {
-                        to = first;
-                    }
-                    */
 
                     Ok(Iter::create_ranged(from, to).into())
                 }
