@@ -196,15 +196,10 @@ impl Transpiler {
 
     fn translate_expr_macro(&self, list: &[Sexp]) -> Result<Expr, String> {
         let name = take_as!(&list[0], Sexp::Sym)?;
-        // TODO: avoid index errors here
-        let mut rest = self.to_expr_vec(&list[1..])?;
-
-        if name.as_ref() == "not" {
-            assert_eq!(1, rest.len());
-            return Ok(Expr::not(rest[0].clone()));
-        }
 
         if let Some(op) = self.maps_to_operator(name.as_ref()) {
+            let mut rest = self.to_expr_vec(&list[1..])?;
+
             // automatically turn first operand into float to
             // avoid information loss on integer division
             if op == Operator2::Div {
@@ -215,8 +210,45 @@ impl Transpiler {
 
             Ok(Expr::from_opn(op, rest))
         } else {
-            let call = Call::with_args(name.as_ref(), rest);
-            Ok(Expr::from(call))
+            match name.as_ref() {
+                "dict" => {
+                    let mut dict = Initialize::new(Value::dict().into());
+
+                    for tuple in &list[1..] {
+                        match tuple {
+                            Sexp::List(tuple, _) => {
+                                assert_eq!(2, tuple.len());
+                                let mut kv = self.to_expr_vec(tuple)?;
+                                let (key, value) = (kv.remove(0), kv.remove(0));
+                                dict.add_by_key(key, value);
+                            }
+                            _ => return Err("expected key-value tuple".to_string()),
+                        }
+                    }
+
+                    Ok(dict.into())
+                }
+                "list" => {
+                    let mut ls = Initialize::new(Value::list().into());
+                    let rest = self.to_expr_vec(&list[1..])?;
+
+                    for item in rest {
+                        ls.add(item);
+                    }
+
+                    Ok(ls.into())
+                }
+                "not" => {
+                    let rest = self.to_expr_vec(&list[1..])?;
+                    assert_eq!(1, rest.len());
+                    Ok(Expr::not(rest[0].clone()))
+                }
+                _ => {
+                    let rest = self.to_expr_vec(&list[1..])?;
+                    let call = Call::with_args(name.as_ref(), rest);
+                    Ok(Expr::from(call))
+                }
+            }
         }
     }
 

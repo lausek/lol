@@ -77,7 +77,7 @@ where
             match build(dir) {
                 Some(main) => {
                     if let Err(e) = int.run_from_path(main) {
-                        println!("{:?}", e);
+                        println!("{}: {}", e.ty, e.msg);
                     }
                 }
                 _ => println!("no entry point"),

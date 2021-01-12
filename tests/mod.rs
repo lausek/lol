@@ -103,3 +103,32 @@ fn import_vice_versa() {
 
     assert!(int.call("a-main", &[0]).is_ok());
 }
+
+#[test]
+fn create_complex_types() {
+    let mut int = Interpreter::new();
+    let main = create_lol_module(
+        "main",
+        r#"
+    (def create-list (n)
+        (ret (list n 2 "abc")))
+
+    (def create-dict (key val)
+        (ret (dict (key val) ("a" 1))))
+        "#,
+    )
+    .unwrap();
+
+    int.load_global(main).unwrap();
+
+    let ls = int.call("create-list", &[true]).unwrap();
+
+    assert_eq!(Value::from(true), ls.get(&0.into()).unwrap());
+    assert_eq!(Value::from(2), ls.get(&1.into()).unwrap());
+    assert_eq!(Value::from("abc"), ls.get(&2.into()).unwrap());
+
+    let dict = int.call("create-dict", &[1, 2]).unwrap();
+
+    assert_eq!(Value::from(2), dict.get(&1.into()).unwrap());
+    assert_eq!(Value::from(1), dict.get(&"a".into()).unwrap());
+}

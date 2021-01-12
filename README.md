@@ -29,11 +29,13 @@ and
 or
 break
 continue
+dict
 do
 if
 import
 import-global
 let
+list
 loop
 ret
 ```
