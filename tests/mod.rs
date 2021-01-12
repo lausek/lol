@@ -132,3 +132,25 @@ fn create_complex_types() {
     assert_eq!(Value::from(2), dict.get(&1.into()).unwrap());
     assert_eq!(Value::from(1), dict.get(&"a".into()).unwrap());
 }
+
+#[test]
+fn foreach() {
+    let mut int = Interpreter::new();
+    let main = create_lol_module(
+        "main",
+        r#"
+    (def sum (n)
+        (let res 0)
+        (foreach ((range 1 (+ n 1)) i)
+            (let res (+ res i)))
+        (ret res))
+        "#,
+    )
+    .unwrap();
+
+    int.load_global(main).unwrap();
+
+    assert_eq!(Value::from(6), int.call("sum", &[3]).unwrap());
+    assert_eq!(Value::from(10), int.call("sum", &[4]).unwrap());
+    assert_eq!(Value::from(15), int.call("sum", &[5]).unwrap());
+}

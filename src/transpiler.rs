@@ -135,6 +135,19 @@ impl Transpiler {
                     self.translate_macro(block, step)?;
                 }
             }
+            "foreach" => {
+                let head = take_as!(&rest[0], Sexp::List)?;
+                assert_eq!(2, head.len());
+
+                let collection = self.translate_expr(&head[0])?;
+                let item = take_as!(&head[1], Sexp::Sym)?;
+                let item = item.to_string();
+
+                let repeat = block.repeat_iterating(Iter::create(collection), item);
+                for step in rest[1..].iter() {
+                    self.translate_macro(repeat.block_mut(), step)?;
+                }
+            }
             "if" => {
                 let condition = self.translate_expr(&rest[0])?;
                 let branch = block.branch();
@@ -242,6 +255,27 @@ impl Transpiler {
                     let rest = self.to_expr_vec(&list[1..])?;
                     assert_eq!(1, rest.len());
                     Ok(Expr::not(rest[0].clone()))
+                }
+                "range" => {
+                    let rest = self.to_expr_vec(&list[1..])?;
+                    //let (mut from, mut to): (Expr, Expr) = (Value::Nil.into(), Value::Nil.into());
+                    let (from, to): (Expr, Expr) = match rest.as_slice() {
+                        [first] => (Value::Nil.into(), first.clone()),
+                        [first, second] => (first.clone(), second.clone()),
+                        _ => unimplemented!(),
+                    };
+                    /*
+                    let first = &rest[0];
+
+                    if let Some(second) = rest.get(1) {
+                        from = first;
+                        to = second;
+                    } else {
+                        to = first;
+                    }
+                    */
+
+                    Ok(Iter::create_ranged(from, to).into())
                 }
                 _ => {
                     let rest = self.to_expr_vec(&list[1..])?;

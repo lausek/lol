@@ -31,11 +31,13 @@ break
 continue
 dict
 do
+foreach
 if
 import
 import-global
 let
 list
 loop
+range
 ret
 ```
