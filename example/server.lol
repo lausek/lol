@@ -10,7 +10,7 @@
 (def parse-get-parameters (url)
     (let args (dict ("passengers" 0)))
 
-    (if (eq url "/")
+    (if (not (contains url "?"))
         (ret args))
 
     (let parts (split url "?"))
