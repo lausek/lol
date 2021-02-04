@@ -30,12 +30,13 @@ fn load_hook(req: &lovm2::vm::LoadRequest) -> Lovm2Result<Option<Module>> {
     Ok(None)
 }
 
-fn import_hook(module: Option<&str>, name: &str) -> String {
+fn import_hook(module: Option<&str>, name: &str) -> Lovm2Result<Option<String>> {
     let name = name.replace("_", "-");
-    match module {
+    let name = match module {
         Some(module) => format!("{}-{}", module, name),
         _ => name.to_string(),
-    }
+    };
+    Ok(Some(name))
 }
 
 pub struct Interpreter {
