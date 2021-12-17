@@ -158,18 +158,18 @@ impl Transpiler {
             }
             "import" => {
                 let name = take_as!(&rest[0], Sexp::Sym)?;
-                block.step(Include::import(name.as_ref()));
+                block.import(name.as_ref());
             }
             "import-global" => {
                 let name = take_as!(&rest[0], Sexp::Sym)?;
-                block.step(Include::import_global(name.as_ref()));
+                block.import_global(name.as_ref());
             }
             "let" => {
                 assert_eq!(2, rest.len());
                 let name = take_as!(&rest[0], Sexp::Sym)?;
                 let name = Variable::from(name.to_string());
                 let val = self.translate_expr(&rest[1])?;
-                block.step(Assign::local(&name, val));
+                block.assign(&name, val);
             }
             "loop" => {
                 let repeat = block.repeat();
@@ -179,13 +179,12 @@ impl Transpiler {
             }
             "ret" => {
                 assert!(rest.len() <= 1);
-                let inx = if rest.is_empty() {
-                    Return::nil()
+                if rest.is_empty() {
+                    block.return_nil();
                 } else {
                     let val = self.translate_expr(&rest[0])?;
-                    Return::value(val)
-                };
-                block.step(inx);
+                    block.return_value(val);
+                }
             }
             _ => {
                 let args = self.to_expr_vec(rest)?;

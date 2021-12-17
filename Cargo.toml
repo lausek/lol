@@ -14,7 +14,7 @@ path = "src/lib.rs"
 
 [dependencies]
 ess = "0.4.2"
-lovm2 = "0.4.8"
-#lovm2 = { git = "https://github.com/lausek/lovm2", branch = "v0.4.8" }
+lovm2 = { git = "https://github.com/lausek/lovm2", branch = "hir-creation" }
+#lovm2 = "0.4.8"
 #lovm2 = { path = "/home/lausek/Projects/lovm2" }
 structopt = "0.3.21"
